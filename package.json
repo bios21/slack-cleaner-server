@@ -1,11 +1,50 @@
 {
   "name": "slack-cleaner-server",
   "version": "1.0.0",
-  "description": "Delete slack messages from channels",
+  "description": "A slack message cleaner webservice hooked to Outgoing WebHooks",
   "main": "bin/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node bin/slack-cleaner-server"
   },
-  "author": "",
-  "license": "ISC"
+  "bin": {
+    "slack-cleaner-server": "bin/slack-cleaner-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bios21/slack-cleaner-server.git"
+  },
+  "keywords": [
+    "slack",
+    "delete",
+    "message",
+    "bulk",
+    "bot",
+    "slackbot"
+  ],
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "colors": "^1.1.2",
+    "express": "^4.14.0",
+    "moment": "^2.13.0",
+    "slack": "^7.7.1",
+    "yargs": "^4.7.1"
+  },
+  "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-cli": "^6.10.1",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-es2015-node4": "^2.1.0",
+    "coveralls": "^2.11.1",
+    "gulp": "^3.8.8",
+    "gulp-babel": "^6.1.2",
+    "gulp-bump": "^0.1.11",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-util": "^3.0.1"
+  },
+  "author": "Lilian Saget-Lethias <lilian.sagetlethias@gmail.com> (http://github.com/bios21)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bios21/slack-cleaner-server/issues"
+  },
+  "homepage": "https://github.com/bios21/slack-cleaner-server#readme"
 }
