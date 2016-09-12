@@ -10,7 +10,10 @@
 
 const   Logger = require('./utils/logger'),
         express = require('express'),
-        slack = require('slack');
+        slack = require('slack'),
+        bodyParser = require('body-parser');
+
+var overflow_indicator = 0;
 
 /**
  * @param token
@@ -19,21 +22,32 @@ const   Logger = require('./utils/logger'),
  */
 function deleteSlackMessages(token, channel_id) {
     return (new Promise((ok, ko) => {
-        slack.channels.history({token:token, channel: channel_id}, (err, data) => {
+        slack.channels.history({token: token, channel: channel_id}, (err, data) => {
             if (err) {
                 Logger.error(`Can't get history message`);
                 ko(err);
             }
-            
-            ok(data.messages);
+
+            if (data.messages) {
+                overflow_indicator--;
+                if (overflow_indicator < 0) {
+                    overflow_indicator = 0;
+                }
+                ok(data.messages);
+            } else {
+                if (overflow_indicator < 3) {
+                    ko('Overflow');
+                } else {
+                    ko();
+                }
+                overflow_indicator++;
+            }
         });
     })).then(messages => {
-        Logger.log(messages);
         messages.forEach(m => {
-            slack.chat.delete({token:token, ts:m.ts, channel:channel_id}, (err, data) => {
+            slack.chat.delete({token: token, ts: m.ts, channel: channel_id}, (err, data) => {
                 if (err) {
                     Logger.error(`Can't delete message`);
-                    throw err;
                 }
             });
         });
@@ -43,15 +57,17 @@ function deleteSlackMessages(token, channel_id) {
 
 module.exports = () => {
     const app = express();
-    
-    app.all('/delete/:token/:channel_id', (req, res) => {
-        Logger.log(req.params);
-        let token = req.params.token,
-            channel_id = req.params.channel_id,
-            team_domain = req.params.team_domain,
-            channel_name = req.params.channel_name;
-        
-        Logger.info(`Called for ${team_domain} on channel ${channel_name} with token ${token}`);
+
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({extended: true}));
+
+    app.all('/delete/:secret/', (req, res) => {
+        let token = req.params.secret,
+            channel_id = req.body.channel_id,
+            team_domain = req.body.team_domain,
+            channel_name = req.body.channel_name;
+
+        Logger.info(`Called for ${team_domain} on channel ${channel_name} (id:${channel_id}) with token ${token}`);
 
         deleteSlackMessages(token, channel_id).then(good => {
             if (good === true) {
@@ -61,12 +77,12 @@ module.exports = () => {
             }
             res.end(null);
         }).catch(err => {
-            Logger.error(err);
+            err && Logger.error(err);
             res.status(500);
             res.end(null);
         });
     });
-    
+
     var server = app.listen(5140, () => {
         Logger.log(`Slack cleaner server will be ready soon on ${server.address().address}:${server.address().port}`);
     });
